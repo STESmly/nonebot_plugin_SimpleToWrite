@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: nonebot_plugin_SimpleToWrite
+Version: 0.1.0
+Summary: 为0编程基础的小白提供便捷的功能编写
+Requires-Python: <4.0,>=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: nonebot2>=2.2.1
+Requires-Dist: nonebot-adapter-onebot>=2.4.3

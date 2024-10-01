@@ -1,0 +1,8 @@
+pyproject.toml
+nonebot_plugin_SimpleToWrite/__init__.py
+nonebot_plugin_SimpleToWrite/config.py
+nonebot_plugin_SimpleToWrite.egg-info/PKG-INFO
+nonebot_plugin_SimpleToWrite.egg-info/SOURCES.txt
+nonebot_plugin_SimpleToWrite.egg-info/dependency_links.txt
+nonebot_plugin_SimpleToWrite.egg-info/requires.txt
+nonebot_plugin_SimpleToWrite.egg-info/top_level.txt
