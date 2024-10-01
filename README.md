@@ -80,6 +80,15 @@ _✨ NoneBot 插件简单描述 ✨_
 | '$getgroupid 参数$' | 获取触发指令的群的群号，参数说明：任意。（可被拿值，也可直接发送） |
 | '$getuserid 参数$' | 获取触发指令的人的QQ号，参数说明：任意。（可被拿值，也可直接发送） |
 
+### 词库格式
+
+指令1
+$函数 参数$
+
+指令2
+$函数 参数$
+$函数 参数$
+
 ### 效果图
 ![4cad3b976d43a88d37ed7a0a087543ca](https://github.com/user-attachments/assets/3d71b761-2058-44cd-97a2-3458226354a8)
 ![49b421ffc1d4e9eaad65cf636fb7f259](https://github.com/user-attachments/assets/8cf52c9c-708a-4525-948c-00c2706c73f8)
