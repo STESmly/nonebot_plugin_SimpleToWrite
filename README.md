@@ -83,11 +83,12 @@ _✨ NoneBot 插件简单描述 ✨_
 ### 词库格式
 ```bash
 指令1
-$函数 参数$
+$sendtext 这是接收到指令1后的发送$
 
 指令2
-$函数 参数$
-$函数 参数$
+$sendreply 0$
+$sendat QQ$
+$senduserimage QQ$
 ```
 
 ### 效果图
