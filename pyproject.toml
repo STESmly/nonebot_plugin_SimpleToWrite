@@ -2,6 +2,9 @@
 name = "nonebot_plugin_SimpleToWrite"
 version = "0.1.0"
 description = "为0编程基础的小白提供便捷的功能编写"
+authors = [
+  { name="STESmly", email="STESmly@mail.com" },
+]
 readme = "README.md"
 requires-python = ">=3.8, <4.0"
 dependencies = [
@@ -9,9 +12,17 @@ dependencies = [
     "nonebot-adapter-onebot>=2.4.3",
 ]
 
+[project.urls]
+Homepage = "https://github.com/STESmly/nonebot_plugin_SimpleToWrite"
+Repository = "https://github.com/STESmly/nonebot_plugin_SimpleToWrite"
+
 [tool.nonebot]
 adapters = [
     { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11" }
 ]
 
 [tool.pdm]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
