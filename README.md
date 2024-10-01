@@ -1,0 +1,2 @@
+# nonebot_plugin_SimpleToWrite
+适用于小白向的快速上手功能编写插件
