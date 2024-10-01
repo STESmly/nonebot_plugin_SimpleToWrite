@@ -1,6 +1,6 @@
 import re
-from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event, PokeNotifyEvent, NotifyEvent
-from nonebot import on_message, on_notice
+from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event
+from nonebot import on_message
 from pathlib import Path
 import nonebot
 from nonebot.rule import is_type
@@ -127,10 +127,6 @@ def asif(s: str, event, data) -> bool:
             match_2 = re.search(r'(.+)\s+in\s+(.+)', s)
             match_3 = re.search(r'(.+)\s+==\s+(.+)', s)
             match_4 = re.search(r'(.+)\s+!=\s+(.+)', s)
-            match_5 = re.search(r'(.+)\s+>=\s+(.+)', s)
-            match_6 = re.search(r'(.+)\s+<=\s+(.+)', s)
-            match_7 = re.search(r'(.+)\s+>\s+(.+)', s)
-            match_8 = re.search(r'(.+)\s+<\s+(.+)', s)
             if match_1:
                 first, second = match_1.groups()
                 match_first = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',first)
@@ -239,65 +235,39 @@ def parse_string(s,event,data):
 
     return result
 
-def poke(event: Event):
-    return isinstance(event, PokeNotifyEvent)
 
 request = on_message(rule=is_type(GroupMessageEvent))
-pokeevent=on_notice(rule=poke)
 
 @request.handle()
 async def _(event: GroupMessageEvent):
-    if event.group_id == 809613000 or event.group_id == 512013169 or event.group_id == 905607644 or event.group_id == 924839357 or event.group_id==995225912:
-        qua = str(event.get_message()).strip()
-    
+    qua = str(event.get_message()).strip()
 
-        file_path = 'dicpro.txt'
+    file_path = 'dicpro.txt'
 
-        s = parse_file(file_path)
-        s = s.replace('$', '&#36;')
+    s = parse_file(file_path)
+    s = s.replace('$', '&#36;')
 
-        result = parse_string(s,event,qua)
-        for key in result:
-            match_data = re.search(rf'^{key}$', qua)
-            if match_data:
-                result = result[key]
-                data = match_data.groups()
-                ans = ""
-                if len(result) != 0:
-                    for i in range(len(result)):
-                        key = result[i]
-                        match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
-                        if match:
-                            func_name, param = match.groups()
-                            if func_name == "sendemojilike":
-                                (bot,) = nonebot.get_bots().values()
-                                mid = event.message_id
-                                await bot.call_api("set_msg_emoji_like",message_id=mid,emoji_id=int(param))
-                                pass
-                            else:
-                                ans += my_function(func_name, param, event,data)
-                    if ans != "":
-                        await request.send(ans)
-                    else:
-                        pass
-
-@pokeevent.handle()
-async def _(event: NotifyEvent):
-    if event.group_id == 809613000:
-        file_path = 'dicpro.txt'
-
-        s = parse_file(file_path)
-
-        result = parse_string(s)
-        if "[戳一戳]" in result:
-            result = result["[戳一戳]"]
+    result = parse_string(s,event,qua)
+    for key in result:
+        match_data = re.search(rf'^{key}$', qua)
+        if match_data:
+            result = result[key]
+            data = match_data.groups()
             ans = ""
             if len(result) != 0:
                 for i in range(len(result)):
                     key = result[i]
-                    match = re.search(r'^#(\w+)\s+(.+)#$', key)
-                    data = ""
+                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
                     if match:
                         func_name, param = match.groups()
-                        ans += my_function(func_name, param, event,data)
-                await pokeevent.send(ans)
+                        if func_name == "sendemojilike":
+                            (bot,) = nonebot.get_bots().values()
+                            mid = event.message_id
+                            await bot.call_api("set_msg_emoji_like",message_id=mid,emoji_id=int(param))
+                            pass
+                        else:
+                            ans += my_function(func_name, param, event,data)
+                if ans != "":
+                    await request.send(ans)
+                else:
+                    pass
