@@ -37,7 +37,7 @@ _✨ NoneBot 插件简单描述 ✨_
 <summary>使用 nb-cli 安装</summary>
 在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
 
-    暂无
+    nb plugin install nonebot_plugin_SimpleToWrite
 
 </details>
 
