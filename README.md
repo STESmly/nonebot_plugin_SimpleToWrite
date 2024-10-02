@@ -57,13 +57,13 @@ _✨ NoneBot 插件简单描述 ✨_
 
 ### 词库格式
 <details>
-指令1
-$sendtext 这是接收到指令1后的发送$
+    指令1
+    $sendtext 这是接收到指令1后的发送$
   
-指令2
-$sendreply 0$
-$sendat QQ$
-$senduserimage QQ$
+    指令2
+    $sendreply 0$
+    $sendat QQ$
+    $senduserimage QQ$
 </details>
 
 ### 效果图
