@@ -6,9 +6,9 @@
 
 <div align="center">
 
-# nonebot-plugin-template
+# nonebot-plugin-SimpleToWrite
 
-_✨ NoneBot 插件简单描述 ✨_
+_✨ NoneBot 插件描述 ✨_
 
 这是一个 nonebot.v11的词库插件
 
