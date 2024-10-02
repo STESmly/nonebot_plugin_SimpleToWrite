@@ -1,23 +1,26 @@
 import re
-from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event
-from nonebot import on_message
+from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event, PrivateMessageEvent
+from nonebot import on_message, on_notice
 from pathlib import Path
 import nonebot
 from nonebot.rule import is_type
-
 from nonebot.plugin import PluginMetadata
-
 from .config import Config
+from typing import Literal, Type, TypeVar
+from nonebot.adapters.onebot.v11 import Adapter
+from nonebot.log import logger
+from nonebot.typing import overrides
+from nonebot.matcher import current_event
 
 __plugin_meta__ = PluginMetadata(
-    name="nonebot_plugin_SimpleToWrite",
-    description="本插件适用于零基础的小白向快速编写功能的插件",
+    name="简易编写词库",
+    description="适用于零基础的小白向快速编写功能的词库语言插件",
     usage="在机器人的项目目录里面新建dicpro.txt，再根据github主页的使用教程进行编写",
 
     type="application",
     # 发布必填，当前有效类型有：`library`（为其他插件编写提供功能），`application`（向机器人用户提供功能）。
 
-    homepage="https://github.com/STESmly/nonebot_plugin_SimpleToWrite",
+    homepage="{项目主页}",
     # 发布必填。
 
     config=Config,
@@ -28,7 +31,66 @@ __plugin_meta__ = PluginMetadata(
     # 若插件可以保证兼容所有适配器（即仅使用基本适配器功能）可不填写，否则应该列出插件支持的适配器。
 )
 
+logger.opt(colors=True).success(
+        f"<yellow>欢迎使用</yellow> <green>简易词库</green> <yellow>插件</yellow> <red>加入开发或反馈bug既可以提issue，也可以联系我</red> QQ：<blue>3791398858</blue>"
+        )
+
+Event_T = TypeVar("Event_T", bound=Type[Event])
+
+
+def register_event(event: Event_T) -> Event_T:
+    Adapter.add_custom_model(event)
+    logger.opt(colors=True).trace(
+        f"Custom event <e>{event.__qualname__!r}</e> registered from module <g>{event.__class__.__module__!r}</g>"
+    )
+    return event
+
+
+@register_event
+class GroupMessageSentEvent(GroupMessageEvent):
+    """群聊消息里自己发送的消息"""
+
+    post_type: Literal["message_sent"]
+    message_type: Literal["group"]
+
+    @overrides(Event)
+    def get_type(self) -> str:
+        """伪装成message类型。"""
+        return "message"
+    
+@register_event
+class PrivateMessageSentEvent(PrivateMessageEvent):
+    """私聊消息里自己发送的消息"""
+
+
+    post_type: Literal["message_sent"]
+    message_type: Literal["private"]
+
+    @overrides(Event)
+    def get_type(self) -> str:
+        """伪装成message类型。"""
+        return "message"
+    
+async def privatemassagefix(event, message):
+    """
+    用于修正人机合一的私聊发送对象\n
+    不使用这个判断的话会导致在私聊人机合一时使用默认的xx.send会导致返回消息一直发送到对bot自身的私聊窗口里面\n
+    :param event: 事件对象
+    :param message: 发送的消息
+    """
+    (bot,) = nonebot.get_bots().values()
+    if event.target_id:
+        return await bot.send_private_msg(user_id=event.target_id,message=message)
+    else:
+        return await bot.send_private_msg(user_id=event.user_id,message=message)
+
 def test(a, event, data):
+    """
+    用于执行函数\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     qua = str(event.get_message()).strip(a)
     qua = qua.replace("$", "&#36;")
     lines = qua.split("\n")
@@ -56,6 +118,12 @@ def test(a, event, data):
     return ans
 
 def sendat(a, event, data):
+    """
+    用于执行艾特对象\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     if a == "QQ":
         ans = MessageSegment.at(event.get_user_id())
     else:
@@ -63,56 +131,118 @@ def sendat(a, event, data):
     return ans
 
 def sendreply(a, event, data):
+    """
+    用于执行回复指令\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     ans = MessageSegment.reply(event.message_id)
     return ans
 
 def getgroupid(a, event, data):
-    ans = event.group_id
-    return ans
+    """
+    用于得到触发指令的群号\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    try:
+        ans = event.group_id
+        return ans
+    except AttributeError:
+        logger.opt(colors=True).info(
+        f"<yellow>错误！</yellow> <red>私聊无法获取群号！</red>"
+        )
+        return 0
+        
 
 def getuserid(a, event, data):
+    """
+    用于得到触发指令的QQ号\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     ans = event.user_id
     return ans
 
 def sendtext(a, event, data):
+    """
+    用于执行发送字符串\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     a = MessageSegment.text(a.replace('\\n', '\n'))
     return a
 
 def gettext(a, event, data):
+    """
+    用于得到正则括号里面的内容\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     result = list(data)
     a = MessageSegment.text(result[int(a)].replace('\\n', '\n'))
     return a
 
 def sendurlimage(a, event, data):
+    """
+    用于执行发送网络图片\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     a = MessageSegment.image(a)
     return a
 
 def sendfileimage(a, event, data):
+    """
+    用于执行发送本地图片\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     a = MessageSegment.image(Path(a))
     return a
 
 def senduserimage(a, event, data):
+    """
+    用于执行发送用户头像\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     if a == "QQ":
         a = MessageSegment.image(f'http://q2.qlogo.cn/headimg_dl?dst_uin={event.user_id}&spec=4')
     else:
         a = MessageSegment.image(f'http://q2.qlogo.cn/headimg_dl?dst_uin={a}&spec=4')
     return a
 
-def is_single_quote(s):
-    try:
-        arr = eval(s)
-        return len(arr) == 1 and isinstance(arr[0], str)
-    except:
-        return False
 
-def is_double_quote(s):
-    try:
-        arr = eval(s)
-        return len(arr) == 3 and all(isinstance(x, str) for x in arr)
-    except:
+def is_quote(s):
+    """
+    用于判断list是为[1,2]还是['1','2']方便进行参数自动修正\n
+    :param s: 传入$函数 参数$里面的参数
+    """
+    arr = eval(s)
+    if all(isinstance(x, str) for x in arr):
+        return True
+    else:
+        logger.opt(colors=True).info(
+        f"<yellow>错误！</yellow>参数：<blue>{s}</blue><red> 似乎未进行元素统一</red> 请以 <green>[1,2]</green> 或 <green>['1','2']</green> 的形式传入参数"
+        )
         return False
 
 def asif(s: str, event, data) -> bool:
+    """
+    用于执行if判断\n
+    :param s: 传入$asif 比较式$里面的比较式
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     if s == "else":
         return True
     try:
@@ -137,7 +267,7 @@ def asif(s: str, event, data) -> bool:
                 if match_second:
                     func_name, param = match_second.groups()
                     second = my_function(func_name, param, event,data)
-                if is_single_quote(str(second)) or is_double_quote(str(second)):
+                if is_quote(str(second)):
                     match = re.search(r"'(.+)'", first)
                     if match:
                         pass
@@ -153,7 +283,7 @@ def asif(s: str, event, data) -> bool:
                 if match_second:
                     func_name, param = match_second.groups()
                     second = my_function(func_name, param, event,data)
-                if is_single_quote(str(second)) or is_double_quote(str(second)):
+                if is_quote(str(second)):
                     match = re.search(r"'(.+)'", first)
                     if match:
                         pass
@@ -191,14 +321,33 @@ def asif(s: str, event, data) -> bool:
         return False
 
 def my_function(func, args, event, data):
-    funcname = eval(func)
-    return funcname(args, event, data)
+    """
+    用于解析并执行词库里面的执行函数\n
+    :param func: 函数名
+    :param args: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    try:
+        funcname = eval(func)
+        return funcname(args, event, data)
+    except NameError:
+        logger.opt(colors=True).info(
+        f"<yellow>错误！</yellow> <blue>{func}</blue><red> 函数未被定义</red>"
+        )
+        pass
 
 def parse_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     return content
 def parse_string(s,event,data):
+    """
+    用于解析文件，将文件解析成json\n
+    :param s: 文件内容
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
     lines = s.split("\n")
     result = {}
     current_key = None
@@ -235,12 +384,13 @@ def parse_string(s,event,data):
 
     return result
 
+grouprequest = on_message(rule=is_type(GroupMessageEvent))
+privaterequest = on_message(rule=is_type(PrivateMessageEvent))
 
-request = on_message(rule=is_type(GroupMessageEvent))
-
-@request.handle()
+@grouprequest.handle()
 async def _(event: GroupMessageEvent):
-    qua = str(event.get_message()).strip()
+    qua = str(event.get_message()).strip().replace('\n','\\n')
+    mid = current_event.get().message_id
 
     file_path = 'dicpro.txt'
 
@@ -262,12 +412,45 @@ async def _(event: GroupMessageEvent):
                         func_name, param = match.groups()
                         if func_name == "sendemojilike":
                             (bot,) = nonebot.get_bots().values()
-                            mid = event.message_id
                             await bot.call_api("set_msg_emoji_like",message_id=mid,emoji_id=int(param))
                             pass
                         else:
-                            ans += my_function(func_name, param, event,data)
+                            getanstype = my_function(func_name, param, event,data)
+                            if getanstype:
+                                ans += getanstype
                 if ans != "":
-                    await request.send(ans)
+                    await grouprequest.send(ans)
+                else:
+                    pass
+
+@privaterequest.handle()
+async def _(event: PrivateMessageEvent):
+    qua = str(event.get_message()).strip()
+    file_path = 'dicpro.txt'
+
+    s = parse_file(file_path)
+    s = s.replace('$', '&#36;')
+
+    result = parse_string(s,event,qua)
+    for key in result:
+        match_data = re.search(rf'^{key}$', qua)
+        if match_data:
+            result = result[key]
+            data = match_data.groups()
+            ans = ""
+            if len(result) != 0:
+                for i in range(len(result)):
+                    key = result[i]
+                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                    if match:
+                        func_name, param = match.groups()
+                        if func_name == "sendemojilike":
+                            pass
+                        else:
+                            getanstype = my_function(func_name, param, event,data)
+                            if getanstype:
+                                ans += getanstype
+                if ans != "":
+                    await privatemassagefix(event, ans)
                 else:
                     pass
