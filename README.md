@@ -56,15 +56,15 @@ _✨ NoneBot 插件简单描述 ✨_
 ![ffa338865205732fbc217b0c277640a4](https://github.com/user-attachments/assets/58811893-93a0-4af3-8ddc-14f58f8668b0)
 
 ### 词库格式
-<details>
-    指令1
-    $sendtext 这是接收到指令1后的发送$
+```bash
+指令1
+$sendtext 这是接收到指令1后的发送$
   
-    指令2
-    $sendreply 0$
-    $sendat QQ$
-    $senduserimage QQ$
-</details>
+指令2
+$sendreply 0$
+$sendat QQ$
+$senduserimage QQ$
+```
 
 ### 效果图
 ![4cad3b976d43a88d37ed7a0a087543ca](https://github.com/user-attachments/assets/ec2dd919-aa85-4a11-9326-801ab99fd579)
