@@ -10,12 +10,17 @@ from pathlib import Path
 import nonebot, math
 from nonebot.log import logger
 
-if nonebot.get_driver().config.allowed_groups:
-    logger.opt(colors=True).success(
+try:
+    if nonebot.get_driver().config.allowed_groups:
+        logger.opt(colors=True).success(
         f"<yellow>allowed_groups</yellow> <green>：被允许使用教程大全的群聊</green> <blue>初始化成功</blue>"
         )
     
-else:
+    else:
+        logger.opt(colors=True).warning(
+        f"<yellow>allowed_groups</yellow> <green>：被允许使用教程大全的群聊</green> <red>未被配置！</red>"
+        )
+except AttributeError:
     logger.opt(colors=True).warning(
         f"<yellow>allowed_groups</yellow> <green>：被允许使用教程大全的群聊</green> <red>未被配置！</red>"
         )
