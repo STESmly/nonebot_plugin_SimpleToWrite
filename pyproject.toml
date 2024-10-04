@@ -1,6 +1,6 @@
 [project]
 name = "nonebot_plugin_SimpleToWrite"
-version = "0.1.1"
+version = "0.1.2"
 description = "为0编程基础的小白提供便捷的功能编写"
 authors = [
   { name="STESmly", email="STESmly@mail.com" },
@@ -10,6 +10,8 @@ requires-python = ">=3.8, <4.0"
 dependencies = [
     "nonebot2>=2.2.1",
     "nonebot-adapter-onebot>=2.4.3",
+    "matplotlib>=3.7.5",
+    "pypinyin>=0.53.0",
 ]
 
 [project.urls]

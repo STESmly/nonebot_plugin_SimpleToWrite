@@ -1,5 +1,5 @@
 import re
-from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event, PrivateMessageEvent
+from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event, PokeNotifyEvent, NotifyEvent, PrivateMessageEvent
 from nonebot import on_message, on_notice
 from pathlib import Path
 import nonebot
@@ -11,6 +11,7 @@ from nonebot.adapters.onebot.v11 import Adapter
 from nonebot.log import logger
 from nonebot.typing import overrides
 from nonebot.matcher import current_event
+from .teach import teach
 
 __plugin_meta__ = PluginMetadata(
     name="简易编写词库",
@@ -20,7 +21,7 @@ __plugin_meta__ = PluginMetadata(
     type="application",
     # 发布必填，当前有效类型有：`library`（为其他插件编写提供功能），`application`（向机器人用户提供功能）。
 
-    homepage="{项目主页}",
+    homepage="https://github.com/STESmly/nonebot_plugin_SimpleToWrite",
     # 发布必填。
 
     config=Config,
@@ -154,7 +155,7 @@ def getgroupid(a, event, data):
         logger.opt(colors=True).info(
         f"<yellow>错误！</yellow> <red>私聊无法获取群号！</red>"
         )
-        return 0
+        return '0'
         
 
 def getuserid(a, event, data):
@@ -165,7 +166,7 @@ def getuserid(a, event, data):
     :param data: 传入正则匹配到的字符串
     """
     ans = event.user_id
-    return ans
+    return str(ans)
 
 def sendtext(a, event, data):
     """
@@ -174,7 +175,18 @@ def sendtext(a, event, data):
     :param event: 事件对象
     :param data: 传入正则匹配到的字符串
     """
-    a = MessageSegment.text(a.replace('\\n', '\n'))
+    get_data = re.findall(r'(.*)%&#36;(.*)&#36;%(.*)',a)
+    result = ["&#36;"+str(x)+"&#36;" for x in get_data[0] if x in get_data[0]]
+    ans = ''
+    for value in result:
+        match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',value)
+        if match:
+            func_name, param = match.groups()
+            first = my_function(func_name, param, event,data)
+            ans += first
+        else:
+            ans += value.replace('&#36;', '')
+    a = MessageSegment.text(ans.replace('\\n', '\n'))
     return a
 
 def gettext(a, event, data):
@@ -185,9 +197,21 @@ def gettext(a, event, data):
     :param data: 传入正则匹配到的字符串
     """
     result = list(data)
-    a = MessageSegment.text(result[int(a)].replace('\\n', '\n'))
-    return a
-
+    if len(result) != 0:
+        try:
+            a = MessageSegment.text(result[int(a)].replace('\\n', '\n'))
+            return str(a)
+        except IndexError:
+            logger.opt(colors=True).error(
+            f"<yellow>异常！</yellow><blue>意外的读取: </blue><red>$gettext {a}$</red>  <green>似乎没有返回值</green>"
+            )
+            return False
+    else:
+        logger.opt(colors=True).error(
+        f"<yellow>异常！</yellow><blue>意外的读取: </blue><red>$gettext {a}$</red>  <green>似乎没有返回值</green>"
+        )
+        return False
+    
 def sendurlimage(a, event, data):
     """
     用于执行发送网络图片\n
