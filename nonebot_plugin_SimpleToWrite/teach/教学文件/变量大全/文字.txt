@@ -24,5 +24,11 @@ $asif 比较式$ 作用：进行比较式判断，条件成立则执行后面的
 
 $sendemojilike n$  作用：表情表态，n为表情id
 
+$getmsgid 任意参数$  作用: 获取指令的msgid
+
+$getreplyid 任意参数$  作用：获取指令回复的消息的msgid
+
+$senddletemsg msgid$  作用：撤回对应消息id的消息
+
 ##仅对要进行特殊说明的函数做单独讲解
 作者：STES沐霖韵

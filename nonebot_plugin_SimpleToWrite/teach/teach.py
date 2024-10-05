@@ -33,8 +33,8 @@ def 生成图片(text):
     font = FontProperties(fname=字体路径)
     ax.text(-0.1, 1.1, text, fontsize=9.5, verticalalignment='top', horizontalalignment='left', fontproperties=font)
     ax.text(1.1, 0, '【BY STES沐霖韵】', fontsize=14, verticalalignment='top', horizontalalignment='right', fontproperties=font)
-    ax.axis('off')  # 关闭坐标轴
-    plt.savefig(f'{module_path}/菜单.png', dpi=120)  # 保存图片
+    ax.axis('off')
+    plt.savefig(f'{module_path}/菜单.png', dpi=120)
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
@@ -74,7 +74,21 @@ def find_folders(path):
         return "无"
     
 def 开放(群号):
-    file = nonebot.get_driver().config.allowed_groups
+    try:
+        if nonebot.get_driver().config.allowed_groups:
+            file = nonebot.get_driver().config.allowed_groups
+    
+        else:
+            logger.opt(colors=True).warning(
+            f"<yellow>allowed_groups</yellow> <green>：被允许使用教程大全的群聊</green> <red>未被配置！</red>"
+            )
+            return False
+    except AttributeError:
+        logger.opt(colors=True).warning(
+            f"<yellow>allowed_groups</yellow> <green>：被允许使用教程大全的群聊</green> <red>未被配置！</red>"
+            )
+        return False
+    
     if str(群号) in file:
         return True
     else:

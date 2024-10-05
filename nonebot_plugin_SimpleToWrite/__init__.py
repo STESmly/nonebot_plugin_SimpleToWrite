@@ -10,7 +10,7 @@ from typing import Literal, Type, TypeVar
 from nonebot.adapters.onebot.v11 import Adapter
 from nonebot.log import logger
 from nonebot.typing import overrides
-from nonebot.matcher import current_event
+from nonebot.matcher import current_event, current_bot
 from .teach import teach
 
 __plugin_meta__ = PluginMetadata(
@@ -85,7 +85,7 @@ async def privatemassagefix(event, message):
     else:
         return await bot.send_private_msg(user_id=event.user_id,message=message)
 
-def test(a, event, data):
+async def test(a, event, data):
     """
     用于执行函数\n
     :param a: 传入$函数 参数$里面的参数
@@ -113,12 +113,12 @@ def test(a, event, data):
                     pass
             else:
                 if type == 1 or type == None:
-                    ans += my_function(func_name, param, event,data)
+                    ans += await my_function(func_name, param, event,data)
                 else:
                     pass
     return ans
 
-def sendat(a, event, data):
+async def sendat(a, event, data):
     """
     用于执行艾特对象\n
     :param a: 传入$函数 参数$里面的参数
@@ -131,7 +131,7 @@ def sendat(a, event, data):
         ans = MessageSegment.at(int(a))
     return ans
 
-def sendreply(a, event, data):
+async def sendreply(a, event, data):
     """
     用于执行回复指令\n
     :param a: 传入$函数 参数$里面的参数
@@ -141,7 +141,50 @@ def sendreply(a, event, data):
     ans = MessageSegment.reply(event.message_id)
     return ans
 
-def getgroupid(a, event, data):
+async def senddletemsg(a, event, data):
+    """
+    用于撤回消息\n
+    :param a: 传入消息id
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',a)
+    if match:
+        func_name, param = match.groups()
+        mid = await my_function(func_name, param, event,data)
+        try:
+            await current_bot.get().delete_msg(message_id=mid)
+            return None
+        except nonebot.adapters.onebot.v11.exception.ActionFailed as e:
+            logger.opt(colors=True).error(
+            f"<yellow>错误！</yellow> <blue>无法撤回</blue> <red>可能是机器人无管理员或群主权限</red>"
+            )
+    else:
+        logger.opt(colors=True).error(
+        f"<yellow>错误！</yellow> <red>无法识别的获取消息id的函数</red> <blue>{a}</blue>"
+        )
+
+async def getmsgid(a, event, data):
+    """
+    用于得到触发指令的消息id\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    ans = event.message_id
+    return str(ans)
+
+async def getreplyid(a, event, data):
+    """
+    用于得到指令回复的消息的消息id\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    ans = event.reply.message_id
+    return str(ans)
+
+async def getgroupid(a, event, data):
     """
     用于得到触发指令的群号\n
     :param a: 传入$函数 参数$里面的参数
@@ -155,8 +198,7 @@ def getgroupid(a, event, data):
         logger.opt(colors=True).info(
         f"<yellow>错误！</yellow> <red>私聊无法获取群号！</red>"
         )
-        return '0'
-        
+        return '0' 
 
 def getuserid(a, event, data):
     """
@@ -167,6 +209,12 @@ def getuserid(a, event, data):
     """
     ans = event.user_id
     return str(ans)
+
+async def sendemojilike(a, event, data):
+    mid = current_event.get().message_id
+    (bot,) = nonebot.get_bots().values()
+    await bot.call_api("set_msg_emoji_like",message_id=mid,emoji_id=int(a))
+    return None
 
 def sendtext(a, event, data):
     """
@@ -189,7 +237,7 @@ def sendtext(a, event, data):
     a = MessageSegment.text(ans.replace('\\n', '\n'))
     return a
 
-def gettext(a, event, data):
+async def gettext(a, event, data):
     """
     用于得到正则括号里面的内容\n
     :param a: 传入$函数 参数$里面的参数
@@ -212,7 +260,7 @@ def gettext(a, event, data):
         )
         return False
     
-def sendurlimage(a, event, data):
+async def sendurlimage(a, event, data):
     """
     用于执行发送网络图片\n
     :param a: 传入$函数 参数$里面的参数
@@ -222,7 +270,7 @@ def sendurlimage(a, event, data):
     a = MessageSegment.image(a)
     return a
 
-def sendfileimage(a, event, data):
+async def sendfileimage(a, event, data):
     """
     用于执行发送本地图片\n
     :param a: 传入$函数 参数$里面的参数
@@ -232,7 +280,7 @@ def sendfileimage(a, event, data):
     a = MessageSegment.image(Path(a))
     return a
 
-def senduserimage(a, event, data):
+async def senduserimage(a, event, data):
     """
     用于执行发送用户头像\n
     :param a: 传入$函数 参数$里面的参数
@@ -260,7 +308,7 @@ def is_quote(s):
         )
         return False
 
-def asif(s: str, event, data) -> bool:
+async def asif(s: str, event, data) -> bool:
     """
     用于执行if判断\n
     :param s: 传入$asif 比较式$里面的比较式
@@ -287,10 +335,10 @@ def asif(s: str, event, data) -> bool:
                 match_second = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',second)
                 if match_first:
                     func_name, param = match_first.groups()
-                    first = my_function(func_name, param, event,data)
+                    first = await my_function(func_name, param, event,data)
                 if match_second:
                     func_name, param = match_second.groups()
-                    second = my_function(func_name, param, event,data)
+                    second = await my_function(func_name, param, event,data)
                 if is_quote(str(second)):
                     match = re.search(r"'(.+)'", first)
                     if match:
@@ -303,10 +351,10 @@ def asif(s: str, event, data) -> bool:
                 match_second = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',second)
                 if match_first:
                     func_name, param = match_first.groups()
-                    first = my_function(func_name, param, event,data)
+                    first = await my_function(func_name, param, event,data)
                 if match_second:
                     func_name, param = match_second.groups()
-                    second = my_function(func_name, param, event,data)
+                    second = await my_function(func_name, param, event,data)
                 if is_quote(str(second)):
                     match = re.search(r"'(.+)'", first)
                     if match:
@@ -319,10 +367,10 @@ def asif(s: str, event, data) -> bool:
                 match_second = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',second)
                 if match_first:
                     func_name, param = match_first.groups()
-                    first = my_function(func_name, param, event,data)
+                    first = await my_function(func_name, param, event,data)
                 if match_second:
                     func_name, param = match_second.groups()
-                    second = my_function(func_name, param, event,data)
+                    second = await my_function(func_name, param, event,data)
                 s = f"'{first}'=='{second}'"
                 if bool(eval(s)):
                     return True
@@ -332,10 +380,10 @@ def asif(s: str, event, data) -> bool:
                 match_second = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',second)
                 if match_first:
                     func_name, param = match_first.groups()
-                    first = my_function(func_name, param, event,data)
+                    first = await my_function(func_name, param, event,data)
                 if match_second:
                     func_name, param = match_second.groups()
-                    second = my_function(func_name, param, event,data)
+                    second = await my_function(func_name, param, event,data)
                 s = f"'{first}'!='{second}'"
                 if bool(eval(s)):
                     return True
@@ -344,7 +392,7 @@ def asif(s: str, event, data) -> bool:
     except Exception as e:
         return False
 
-def my_function(func, args, event, data):
+async def my_function(func, args, event, data):
     """
     用于解析并执行词库里面的执行函数\n
     :param func: 函数名
@@ -354,7 +402,7 @@ def my_function(func, args, event, data):
     """
     try:
         funcname = eval(func)
-        return funcname(args, event, data)
+        return await funcname(args, event, data)
     except NameError:
         logger.opt(colors=True).info(
         f"<yellow>错误！</yellow> <blue>{func}</blue><red> 函数未被定义</red>"
@@ -365,7 +413,7 @@ def parse_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     return content
-def parse_string(s,event,data):
+async def parse_string(s,event,data):
     """
     用于解析文件，将文件解析成json\n
     :param s: 文件内容
@@ -391,7 +439,7 @@ def parse_string(s,event,data):
                 if match:
                     func_name, param = match.groups()
                     if func_name == "asif":
-                        if asif(param,event,data):
+                        if await asif(param,event,data):
                             type = 1
                             pass
                         else:
@@ -414,13 +462,9 @@ privaterequest = on_message(rule=is_type(PrivateMessageEvent))
 @grouprequest.handle()
 async def _(event: GroupMessageEvent):
     qua = str(event.get_message()).strip().replace('\n','\\n')
-    mid = current_event.get().message_id
-
     file_path = 'dicpro.txt'
-
     s = parse_file(file_path)
     s = s.replace('$', '&#36;')
-
     result = parse_string(s,event,qua)
     for key in result:
         match_data = re.search(rf'^{key}$', qua)
@@ -434,14 +478,9 @@ async def _(event: GroupMessageEvent):
                     match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
                     if match:
                         func_name, param = match.groups()
-                        if func_name == "sendemojilike":
-                            (bot,) = nonebot.get_bots().values()
-                            await bot.call_api("set_msg_emoji_like",message_id=mid,emoji_id=int(param))
-                            pass
-                        else:
-                            getanstype = my_function(func_name, param, event,data)
-                            if getanstype:
-                                ans += getanstype
+                        getanstype = await my_function(func_name, param, event,data)
+                        if getanstype:
+                            ans += getanstype
                 if ans != "":
                     await grouprequest.send(ans)
                 else:
@@ -451,10 +490,8 @@ async def _(event: GroupMessageEvent):
 async def _(event: PrivateMessageEvent):
     qua = str(event.get_message()).strip()
     file_path = 'dicpro.txt'
-
     s = parse_file(file_path)
     s = s.replace('$', '&#36;')
-
     result = parse_string(s,event,qua)
     for key in result:
         match_data = re.search(rf'^{key}$', qua)
@@ -468,12 +505,9 @@ async def _(event: PrivateMessageEvent):
                     match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
                     if match:
                         func_name, param = match.groups()
-                        if func_name == "sendemojilike":
-                            pass
-                        else:
-                            getanstype = my_function(func_name, param, event,data)
-                            if getanstype:
-                                ans += getanstype
+                        getanstype = await my_function(func_name, param, event,data)
+                        if getanstype:
+                            ans += getanstype
                 if ans != "":
                     await privatemassagefix(event, ans)
                 else:
