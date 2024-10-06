@@ -64,9 +64,9 @@ COMMAND_START=["/",""]
 
 help_type=0  ##0为文字 1为图片
 
-teach_on_off=1 ##是否开启教程功能1开，其他为关闭
+teach_on_off=1 ##是否开启教程功能1是开，其他为关闭
 
-help_on_off=1 ##是否开启帮助功能1开，其他为关闭
+help_on_off=1 ##是否开启帮助功能1是开，其他为关闭
 
 allowed_groups=["能触发教程的指令的群号"]
 
