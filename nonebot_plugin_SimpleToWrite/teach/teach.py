@@ -13,22 +13,22 @@ from nonebot.log import logger
 try:
     if nonebot.get_driver().config.allowed_groups:
         logger.opt(colors=True).success(
-        f"<yellow>allowed_groups</yellow> <green>：被允许使用教程大全的群聊</green> <blue>初始化成功</blue>"
+        f"<yellow>allowed_groups</yellow> : <green>被允许使用教程大全的群聊</green> <blue>初始化成功</blue>"
         )
     
     else:
         logger.opt(colors=True).warning(
-        f"<yellow>allowed_groups</yellow> <green>：被允许使用教程大全的群聊</green> <red>未被配置！</red>"
+        f"<yellow>allowed_groups</yellow> : <green>被允许使用教程大全的群聊</green> <red>未被配置！</red>"
         )
 except AttributeError:
     logger.opt(colors=True).warning(
-        f"<yellow>allowed_groups</yellow> <green>：被允许使用教程大全的群聊</green> <red>未被配置！</red>"
+        f"<yellow>allowed_groups</yellow> : <green>被允许使用教程大全的群聊</green> <red>未被配置！</red>"
         )
 
 module_path: Path = Path(__file__).parent
 
 def 生成图片(text):
-    字体路径="C:/Users/Administrator/Desktop/nonebot-plugin-gspanel-main/data/gspanel/font/HYWH-65W.ttf"
+    字体路径=f"{module_path}/HYWH-65W.ttf"
     fig, ax = plt.subplots(figsize=(6, 3.8))  # 调整画布大小
     font = FontProperties(fname=字体路径)
     ax.text(-0.1, 1.1, text, fontsize=9.5, verticalalignment='top', horizontalalignment='left', fontproperties=font)
@@ -80,16 +80,30 @@ def 开放(群号):
     
         else:
             logger.opt(colors=True).warning(
-            f"<yellow>allowed_groups</yellow> <green>：被允许使用教程大全的群聊</green> <red>未被配置！</red>"
+            f"<yellow>allowed_groups</yellow> : <green>被允许使用教程大全的群聊</green> <red>未被配置！</red>"
             )
             return False
     except AttributeError:
         logger.opt(colors=True).warning(
-            f"<yellow>allowed_groups</yellow> <green>：被允许使用教程大全的群聊</green> <red>未被配置！</red>"
+            f"<yellow>allowed_groups</yellow> : <green>被允许使用教程大全的群聊</green> <red>未被配置！</red>"
+            )
+        return False
+    try:
+        if nonebot.get_driver().config.teach_on_off:
+            ans = nonebot.get_driver().config.teach_on_off
+    
+        else:
+            logger.opt(colors=True).warning(
+            f"<yellow>teach_on_off</yellow> : <green>教程开关</green> <red>未被配置！</red>"
+            )
+            return False
+    except AttributeError:
+        logger.opt(colors=True).warning(
+            f"<yellow>teach_on_off</yellow> : <green>教程开关</green> <red>未被配置！</red>"
             )
         return False
     
-    if str(群号) in file:
+    if str(群号) in file and ans == 1:
         return True
     else:
         return False
@@ -108,7 +122,7 @@ async def privatemassagefix(event, message):
         return await bot.send_private_msg(user_id=event.user_id,message=message)
 
 查询 = on_command("查询")
-大全 = on_command('教程大全',aliases={"教程","机器人"})
+大全 = on_command('教程大全',aliases={"教程","机器人","部署"})
 解释 = on_command("解释")
 下一页 = on_command("下一页")
 上一页 = on_command("上一页")

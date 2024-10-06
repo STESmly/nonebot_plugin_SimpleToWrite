@@ -105,7 +105,7 @@ async def test(a, event, data):
                 ans = "禁止套娃"
                 break
             if func_name == "asif":
-                if asif(param,event,data):
+                if await asif(param,event,data):
                     type = 1
                     pass
                 else:
@@ -216,7 +216,7 @@ async def sendemojilike(a, event, data):
     await bot.call_api("set_msg_emoji_like",message_id=mid,emoji_id=int(a))
     return None
 
-def sendtext(a, event, data):
+async def sendtext(a, event, data):
     """
     用于执行发送字符串\n
     :param a: 传入$函数 参数$里面的参数
@@ -224,16 +224,19 @@ def sendtext(a, event, data):
     :param data: 传入正则匹配到的字符串
     """
     get_data = re.findall(r'(.*)%&#36;(.*)&#36;%(.*)',a)
-    result = ["&#36;"+str(x)+"&#36;" for x in get_data[0] if x in get_data[0]]
-    ans = ''
-    for value in result:
-        match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',value)
-        if match:
-            func_name, param = match.groups()
-            first = my_function(func_name, param, event,data)
-            ans += first
-        else:
-            ans += value.replace('&#36;', '')
+    if get_data:
+        result = ["&#36;"+str(x)+"&#36;" for x in get_data[0] if x in get_data[0]]
+        ans = ''
+        for value in result:
+            match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',value)
+            if match:
+                func_name, param = match.groups()
+                first = await my_function(func_name, param, event,data)
+                ans += first
+            else:
+                ans += value.replace('&#36;', '')
+    else:
+        ans = a
     a = MessageSegment.text(ans.replace('\\n', '\n'))
     return a
 
