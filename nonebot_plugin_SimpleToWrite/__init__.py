@@ -1,11 +1,10 @@
 import re
-from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event, PokeNotifyEvent, NotifyEvent, PrivateMessageEvent
+from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event, PokeNotifyEvent, NotifyEvent, PrivateMessageEvent, PrivateMessageEvent, GroupIncreaseNoticeEvent
 from nonebot import on_message, on_notice
 from pathlib import Path
 import nonebot
 from nonebot.rule import is_type
 from nonebot.plugin import PluginMetadata
-from .config import Config
 from typing import Literal, Type, TypeVar
 from nonebot.adapters.onebot.v11 import Adapter
 from nonebot.log import logger
@@ -206,6 +205,17 @@ def getuserid(a, event, data):
     """
     ans = event.user_id
     return str(ans)
+
+async def getselfid(a, event, data):
+    ans = event.self_id
+    return str(ans)
+
+async def gettargetid(a, event, data):
+    try:
+        ans = event.target_id
+        return str(ans)
+    except AttributeError:
+        return None
 
 async def sendemojilike(a, event, data):
     mid = current_event.get().message_id
@@ -456,8 +466,16 @@ async def parse_string(s,event,data):
 
     return result
 
+def poke(event: Event):
+    return isinstance(event, PokeNotifyEvent)
+
+def groupadd(event: Event):
+    return isinstance(event, GroupIncreaseNoticeEvent)
+
 grouprequest = on_message(rule=is_type(GroupMessageEvent))
 privaterequest = on_message(rule=is_type(PrivateMessageEvent))
+pokeevent=on_notice(rule=poke)
+groupaddevent=on_notice(rule=groupadd)
 
 @grouprequest.handle()
 async def _(event: GroupMessageEvent):
@@ -512,3 +530,47 @@ async def _(event: PrivateMessageEvent):
                     await privatemassagefix(event, ans)
                 else:
                     pass
+
+@pokeevent.handle()
+async def _(event: NotifyEvent):
+    if event.group_id == 809613000:
+        file_path = 'dicpro.txt'
+
+        s = parse_file(file_path)
+        s = s.replace('$', '&#36;')
+
+        result = await parse_string(s,event,data=None)
+        if "[戳一戳]" in result:
+            result = result["[戳一戳]"]
+            ans = ""
+            if len(result) != 0:
+                for i in range(len(result)):
+                    key = result[i]
+                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                    data = ""
+                    if match:
+                        func_name, param = match.groups()
+                        ans += await my_function(func_name, param, event,data)
+                await pokeevent.send(ans)
+
+@groupaddevent.handle()
+async def _(event: GroupIncreaseNoticeEvent):
+    if event.group_id == 809613000:
+        file_path = 'dicpro.txt'
+
+        s = parse_file(file_path)
+        s = s.replace('$', '&#36;')
+
+        result = await parse_string(s,event,data=None)
+        if "[入群通知]" in result:
+            result = result["[入群通知]"]
+            ans = ""
+            if len(result) != 0:
+                for i in range(len(result)):
+                    key = result[i]
+                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                    data = ""
+                    if match:
+                        func_name, param = match.groups()
+                        ans += await my_function(func_name, param, event,data)
+                await pokeevent.send(ans)
