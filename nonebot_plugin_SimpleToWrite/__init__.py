@@ -270,6 +270,45 @@ async def gettext(a, event, data):
         )
         return False
     
+async def getusername(a, event, data):
+    """
+    用于得到用户名\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    (bot,) = nonebot.get_bots().values()
+    if a !="QQ":
+        try:
+            result = await bot.get_group_member_info(group_id=event.group_id,user_id=a)
+            name = result['card']
+            if len(str(name)) == 0:
+                name = result['nickname']
+            return name
+        except nonebot.adapters.onebot.v11.exception.ActionFailed:
+            logger.opt(colors=True).error(
+            f"<yellow>错误！</yellow> <blue>无法获取</blue> <red>群成员</red> {a} <red>不存在</red>"
+            )
+            return None
+    else:
+        result = await bot.get_group_member_info(group_id=event.group_id,user_id=event.user_id)
+        name = result['card']
+        if len(str(name)) == 0:
+            name = result['nickname']
+        return name
+
+async def getgroupname(a, event, data):
+    """
+    用于得到群名\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    (bot,) = nonebot.get_bots().values()
+    result = await bot.get_group_info(group_id=event.group_id)
+    name = result['group_name']
+    return name
+    
 async def sendurlimage(a, event, data):
     """
     用于执行发送网络图片\n
