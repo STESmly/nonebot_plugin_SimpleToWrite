@@ -42,5 +42,7 @@ $getgroupname 任意参数$  作用：获取触发指令的群名称(不识别�
 
 $getusername QQ（或指定QQ号）$  作用：获取在当前群内指定QQ的昵称
 
+$geturl 链接 @key@key$  作用：用于获取url中的值
+
 ##仅对要进行特殊说明的函数做单独讲解
 作者：STES沐霖韵

@@ -11,6 +11,7 @@ from nonebot.log import logger
 from nonebot.typing import overrides
 from nonebot.matcher import current_event, current_bot
 from .teach import teach
+import httpx
 
 __plugin_meta__ = PluginMetadata(
     name="简易编写词库",
@@ -308,6 +309,34 @@ async def getgroupname(a, event, data):
     result = await bot.get_group_info(group_id=event.group_id)
     name = result['group_name']
     return name
+
+async def geturl(a, event, data):
+    """
+    用于得到url\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    qua = a.split(" ")
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(qua[0])
+        if len(qua) > 1:
+            r = r.json()
+            key_list = qua[1].split("@")
+            for i in range(1,len(key_list) if len(key_list) >= 1 else 0):
+                try:
+                    r= r[int(key_list[i])]
+                except:
+                    r = r[key_list[i]]
+        try:
+            return r.text
+        except AttributeError:
+            return str(r)
+    except httpx.ConnectTimeout:
+        logger.opt(colors=True).error(
+        f"<yellow>异常！</yellow>对链接：<blue>{qua[0]}</blue><red> 的请求超时</red>  <green>请稍后再试</green>"
+        )
     
 async def sendurlimage(a, event, data):
     """
@@ -316,6 +345,10 @@ async def sendurlimage(a, event, data):
     :param event: 事件对象
     :param data: 传入正则匹配到的字符串
     """
+    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',a)
+    if match:
+        func_name, param = match.groups()
+        a = await my_function(func_name, param, event,data)
     a = MessageSegment.image(a)
     return a
 
@@ -378,6 +411,10 @@ async def asif(s: str, event, data) -> bool:
             match_2 = re.search(r'(.+)\s+in\s+(.+)', s)
             match_3 = re.search(r'(.+)\s+==\s+(.+)', s)
             match_4 = re.search(r'(.+)\s+!=\s+(.+)', s)
+            match_5 = re.search(r'(.+)\s+>=\s+(.+)', s)
+            match_6 = re.search(r'(.+)\s+<=\s+(.+)', s)
+            match_7 = re.search(r'(.+)\s+>\s+(.+)', s)
+            match_8 = re.search(r'(.+)\s+<\s+(.+)', s)
             if match_1:
                 first, second = match_1.groups()
                 match_first = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',first)
@@ -436,7 +473,50 @@ async def asif(s: str, event, data) -> bool:
                 s = f"'{first}'!='{second}'"
                 if bool(eval(s)):
                     return True
-        
+            elif match_5:
+                first, second = match_5.groups()
+                match_first = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',first)
+                match_second = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',second)
+                if match_first:
+                    func_name, param = match_first.groups()
+                    first = await my_function(func_name, param, event,data)
+                if match_second:
+                    func_name, param = match_second.groups()
+                    second = await my_function(func_name, param, event,data)
+                s = f"{first}>={second}"
+            elif match_6:
+                first, second = match_6.groups()
+                match_first = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',first)
+                match_second = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',second)
+                if match_first:
+                    func_name, param = match_first.groups()
+                    first = await my_function(func_name, param, event,data)
+                if match_second:
+                    func_name, param = match_second.groups()
+                    second = await my_function(func_name, param, event,data)
+                s = f"{first}<={second}"
+            elif match_7:
+                first, second = match_7.groups()
+                match_first = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',first)
+                match_second = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',second)
+                if match_first:
+                    func_name, param = match_first.groups()
+                    first = await my_function(func_name, param, event,data)
+                if match_second:
+                    func_name, param = match_second.groups()
+                    second = await my_function(func_name, param, event,data)
+                s = f"{first}>{second}"
+            elif match_8:
+                first, second = match_8.groups()
+                match_first = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',first)
+                match_second = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',second)
+                if match_first:
+                    func_name, param = match_first.groups()
+                    first = await my_function(func_name, param, event,data)
+                if match_second:
+                    func_name, param = match_second.groups()
+                    second = await my_function(func_name, param, event,data)
+                s = f"{first}<{second}"
         return bool(eval(s))
     except Exception as e:
         return False

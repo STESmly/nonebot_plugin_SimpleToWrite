@@ -1,0 +1,38 @@
+说明：本词库语言是基于py开发的nonebot简易词库插件（仅用于野bot）
+
+一. 变量说明
+
+$geturl 链接 @key@key$
+
+以$作为函数标识，前面为函数名称。后面为传递的参数
+
+二. 使用教程
+
+在dicpro.txt以以下格式写入
+
+测试指令（支持正则）
+$sendurlimage $geturl https://api.tangdouz.com/wz/cq.php?return=url$$  #示例链接
+$get https://api.tangdouz.com/nlholiday.php?return=json @0@holiday$ #示例链接
+
+Q：测试指令
+A：[一张图]
+   周末
+
+三. 特殊说明！！！
+@key 是指在json中的key，用于获取链接的json中对应的值
+
+
+四. 注意事项：
+
+指令，变量写完一个一定要提行，且不同指令中间一定要隔至少一行，不然无法进行识别（转译逻辑不完整）
+
+格式示例：
+
+指令1
+$sendtext 测试成功$
+
+指令2
+$sendtext 测试成功$
+
+
+作者：STES沐霖韵
