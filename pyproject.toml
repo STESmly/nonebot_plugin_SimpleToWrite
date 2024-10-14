@@ -1,6 +1,6 @@
 [project]
 name = "nonebot_plugin_SimpleToWrite"
-version = "0.1.8"
+version = "0.1.9"
 description = "为0编程基础的小白提供便捷的功能编写"
 authors = [
   { name="STESmly", email="STESmly@mail.com" },

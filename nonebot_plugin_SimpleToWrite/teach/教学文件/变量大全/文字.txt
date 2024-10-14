@@ -44,5 +44,9 @@ $getusername QQ（或指定QQ号）$  作用：获取在当前群内指定QQ的�
 
 $geturl 链接 @key@key$  作用：用于获取url中的值
 
+$getat n$ 作用：获取艾特对象的QQ号（返回正则后第n+1个艾特对象的QQ号）
+
+$sendpoke QQ（或指定QQ号）$  作用：发送对群内指定QQ号的戳一戳（llob最新版本可支持主动戳一戳）
+
 ##仅对要进行特殊说明的函数做单独讲解
 作者：STES沐霖韵

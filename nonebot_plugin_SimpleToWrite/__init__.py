@@ -376,6 +376,43 @@ async def senduserimage(a, event, data):
     return a
 
 
+async def sendpoke(a, event, data):
+    """
+    用于执行发送戳一戳\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$',a)
+    if match:
+        func_name, param = match.groups()
+        user_id = await my_function(func_name, param, event,data)
+    elif a == "QQ":
+        user_id = event.user_id
+    else:
+        logger.opt(colors=True).error(f"<yellow>异常！</yellow>参数：<blue>{a}</blue><red> 无法解析</red>")
+        return None
+    (bot,) = nonebot.get_bots().values()
+    try:
+        await bot.call_api("group_poke", group_id=event.group_id, user_id=user_id)
+    except nonebot.adapters.onebot.v11.exception.NetworkError:
+        logger.opt(colors=True).error(f"<yellow>异常！</yellow>参数：<blue>{a}</blue><red> 网络错误</red>")
+    return None
+
+async def getat(a, event, data):
+    """
+    用于执行获取艾特对象的QQ号\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    if len(at := event.original_message.include("at")) > 0:
+        try:
+            id = at[int(a)].data["qq"]
+            return str(id)
+        except IndexError:
+            logger.opt(colors=True).error(f"<yellow>异常！</yellow>参数：<blue>{a}</blue><red> 无法解析</red>")
+
 def is_quote(s):
     """
     用于判断list是为[1,2]还是['1','2']方便进行参数自动修正\n
