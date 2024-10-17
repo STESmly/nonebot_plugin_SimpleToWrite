@@ -1,6 +1,6 @@
 import re
-from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event, PokeNotifyEvent, NotifyEvent, PrivateMessageEvent, PrivateMessageEvent, GroupIncreaseNoticeEvent
-from nonebot import on_message, on_notice
+from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event, PokeNotifyEvent, NotifyEvent, PrivateMessageEvent, PrivateMessageEvent, GroupIncreaseNoticeEvent, GroupRequestEvent
+from nonebot import on_message, on_notice, on_request
 from pathlib import Path
 import nonebot
 from nonebot.rule import is_type
@@ -287,10 +287,15 @@ async def getusername(a, event, data):
                 name = result['nickname']
             return name
         except nonebot.adapters.onebot.v11.exception.ActionFailed:
-            logger.opt(colors=True).error(
-            f"<yellow>错误！</yellow> <blue>无法获取</blue> <red>群成员</red> {a} <red>不存在</red>"
-            )
-            return None
+            try:
+                result = await bot.get_stranger_info(user_id=event.user_id)
+                name = name['nickname']
+                return name
+            except nonebot.adapters.onebot.v11.exception.ActionFailed:
+                logger.opt(colors=True).error(
+                f"<yellow>错误！</yellow> <blue>无法获取</blue> <red>群成员</red> {a} <red>不存在</red>"
+                )
+                return None
     else:
         result = await bot.get_group_member_info(group_id=event.group_id,user_id=event.user_id)
         name = result['card']
@@ -622,16 +627,22 @@ async def parse_string(s,event,data):
 
     return result
 
+event_rule = ['[戳一戳]','[入群通知]','[加群请求]']
+
 def poke(event: Event):
     return isinstance(event, PokeNotifyEvent)
 
 def groupadd(event: Event):
     return isinstance(event, GroupIncreaseNoticeEvent)
 
+def groupwantadd(event: Event):
+    return isinstance(event, GroupRequestEvent)
+
 grouprequest = on_message(rule=is_type(GroupMessageEvent))
 privaterequest = on_message(rule=is_type(PrivateMessageEvent))
 pokeevent=on_notice(rule=poke)
 groupaddevent=on_notice(rule=groupadd)
+groupwantaddevent=on_request(rule=groupwantadd)
 
 @grouprequest.handle()
 async def _(event: GroupMessageEvent):
@@ -642,7 +653,7 @@ async def _(event: GroupMessageEvent):
     result = parse_string(s,event,qua)
     for key in result:
         match_data = re.search(rf'^{key}$', qua)
-        if match_data:
+        if match_data and key not in event_rule:
             result = result[key]
             data = match_data.groups()
             ans = ""
@@ -669,7 +680,7 @@ async def _(event: PrivateMessageEvent):
     result = parse_string(s,event,qua)
     for key in result:
         match_data = re.search(rf'^{key}$', qua)
-        if match_data:
+        if match_data and key not in event_rule:
             result = result[key]
             data = match_data.groups()
             ans = ""
@@ -689,44 +700,60 @@ async def _(event: PrivateMessageEvent):
 
 @pokeevent.handle()
 async def _(event: NotifyEvent):
-    if event.group_id == 809613000:
-        file_path = 'dicpro.txt'
-
-        s = parse_file(file_path)
-        s = s.replace('$', '&#36;')
-
-        result = await parse_string(s,event,data=None)
-        if "[戳一戳]" in result:
-            result = result["[戳一戳]"]
-            ans = ""
-            if len(result) != 0:
-                for i in range(len(result)):
-                    key = result[i]
-                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
-                    data = ""
-                    if match:
-                        func_name, param = match.groups()
-                        ans += await my_function(func_name, param, event,data)
-                await pokeevent.send(ans)
+    file_path = 'dicpro.txt'
+    s = parse_file(file_path)
+    s = s.replace('$', '&#36;')
+    result = await parse_string(s,event,data=None)
+    if "[戳一戳]" in result:
+        result = result["[戳一戳]"]
+        ans = ""
+        if len(result) != 0:
+            for i in range(len(result)):
+                key = result[i]
+                match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                data = ""
+                if match:
+                    func_name, param = match.groups()
+                    ans += await my_function(func_name, param, event,data)
+            await pokeevent.send(ans)
 
 @groupaddevent.handle()
 async def _(event: GroupIncreaseNoticeEvent):
-    if event.group_id == 809613000:
-        file_path = 'dicpro.txt'
+    file_path = 'dicpro.txt'
+    s = parse_file(file_path)
+    s = s.replace('$', '&#36;')
 
-        s = parse_file(file_path)
-        s = s.replace('$', '&#36;')
+    result = await parse_string(s,event,data=None)
+    if "[入群通知]" in result:
+        result = result["[入群通知]"]
+        ans = ""
+        if len(result) != 0:
+            for i in range(len(result)):
+                key = result[i]
+                match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                data = ""
+                if match:
+                    func_name, param = match.groups()
+                    ans += await my_function(func_name, param, event,data)
+            await pokeevent.send(ans)
 
-        result = await parse_string(s,event,data=None)
-        if "[入群通知]" in result:
-            result = result["[入群通知]"]
-            ans = ""
-            if len(result) != 0:
-                for i in range(len(result)):
-                    key = result[i]
-                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
-                    data = ""
-                    if match:
-                        func_name, param = match.groups()
-                        ans += await my_function(func_name, param, event,data)
-                await pokeevent.send(ans)
+@groupwantaddevent.handle()
+async def _(event: GroupRequestEvent):
+    file_path = 'dicpro.txt'
+
+    s = parse_file(file_path)
+    s = s.replace('$', '&#36;')
+
+    result = await parse_string(s,event,data=None)
+    if "[加群请求]" in result:
+        result = result["[加群请求]"]
+        ans = ""
+        if len(result) != 0:
+            for i in range(len(result)):
+                key = result[i]
+                match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                data = ""
+                if match:
+                    func_name, param = match.groups()
+                    ans += await my_function(func_name, param, event,data)
+            await groupwantaddevent.send(ans)
