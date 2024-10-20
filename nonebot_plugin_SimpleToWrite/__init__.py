@@ -1,3 +1,5 @@
+import ast
+import random
 import re
 from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event, PokeNotifyEvent, NotifyEvent, PrivateMessageEvent, PrivateMessageEvent, GroupIncreaseNoticeEvent, GroupRequestEvent
 from nonebot import on_message, on_notice, on_request
@@ -240,11 +242,11 @@ async def sendtext(a, event, data):
             if match:
                 func_name, param = match.groups()
                 first = await my_function(func_name, param, event,data)
-                ans += first
+                ans += str(first)
             else:
                 ans += value.replace('&#36;', '')
     else:
-        ans = a
+        ans = str(a)
     a = MessageSegment.text(ans.replace('\\n', '\n'))
     return a
 
@@ -431,6 +433,26 @@ def is_quote(s):
         f"<yellow>错误！</yellow>参数：<blue>{s}</blue><red> 似乎未进行元素统一</red> 请以 <green>[1,2]</green> 或 <green>['1','2']</green> 的形式传入参数"
         )
         return False
+    
+async def getrandom(a, event, data):
+    """
+    用于执行随机数生成和列表随机取元素\n
+    :param a: 传入$函数 参数$里面的参数
+    :param event: 事件对象
+    :param data: 传入正则匹配到的字符串
+    """
+    match_1 = re.search(r'^(\d+)+-+(\d+)$',str(a))
+    if match_1:
+        first, second = match_1.groups()
+        try:
+            ans = random.randint(int(first), int(second))
+            return ans
+        except:
+            return 0
+    elif type(a) == list or type(a := ast.literal_eval(a)) == list:
+        return random.choice(a)
+    else:
+        return 0
 
 async def asif(s: str, event, data) -> bool:
     """
