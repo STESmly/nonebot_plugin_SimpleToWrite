@@ -1,4 +1,5 @@
 import ast
+import os
 import random
 import re
 from nonebot.adapters.onebot.v11 import MessageSegment,GroupMessageEvent,Event, PokeNotifyEvent, NotifyEvent, PrivateMessageEvent, PrivateMessageEvent, GroupIncreaseNoticeEvent, GroupRequestEvent
@@ -34,6 +35,28 @@ __plugin_meta__ = PluginMetadata(
 logger.opt(colors=True).success(
         f"<yellow>欢迎使用</yellow> <green>简易词库</green> <yellow>插件</yellow> <red>加入开发或反馈bug既可以提issue，也可以联系我</red> QQ：<blue>3791398858</blue>"
         )
+
+if os.path.exists("dicpro.txt"):
+    logger.opt(colors=True).success(
+        f"<green>dicpro.txt加载成功</green>"
+        )
+else:
+    logger.opt(colors=True).success(
+        f"<green>dicpro.txt已自动创建</green>"
+        )
+    with open("dicpro.txt", "w", encoding="utf-8") as f:
+        f.write("")
+
+if os.path.exists("help.txt"):
+    logger.opt(colors=True).success(
+        f"<green>help.txt加载成功</green>"
+        )
+else:
+    logger.opt(colors=True).success(
+        f"<green>help.txt已自动创建</green>"
+        )
+    with open("help.txt", "w", encoding="utf-8") as f:
+        f.write("")
 
 Event_T = TypeVar("Event_T", bound=Type[Event])
 
@@ -603,9 +626,16 @@ async def my_function(func, args, event, data):
         pass
 
 def parse_file(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    return content
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return content
+    else:
+        logger.opt(colors=True).error(
+        f"<yellow>错误！</yellow> <blue>{file_path}</blue><red> 文件不存在</red>"
+        )
+        return None
+    
 async def parse_string(s,event,data):
     """
     用于解析文件，将文件解析成json\n
@@ -671,111 +701,133 @@ async def _(event: GroupMessageEvent):
     qua = str(event.get_message()).strip().replace('\n','\\n')
     file_path = 'dicpro.txt'
     s = parse_file(file_path)
-    s = s.replace('$', '&#36;')
-    result = parse_string(s,event,qua)
-    for key in result:
-        match_data = re.search(rf'^{key}$', qua)
-        if match_data and key not in event_rule:
-            result = result[key]
-            data = match_data.groups()
-            ans = ""
-            if len(result) != 0:
-                for i in range(len(result)):
-                    key = result[i]
-                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
-                    if match:
-                        func_name, param = match.groups()
-                        getanstype = await my_function(func_name, param, event,data)
-                        if getanstype:
-                            ans += getanstype
-                if ans != "":
-                    await grouprequest.send(ans)
-                else:
-                    pass
+    if s:
+        s = s.replace('$', '&#36;')
+        result = parse_string(s,event,qua)
+        for key in result:
+            match_data = re.search(rf'^{key}$', qua)
+            if match_data and key not in event_rule:
+                result = result[key]
+                data = match_data.groups()
+                ans = ""
+                if len(result) != 0:
+                    for i in range(len(result)):
+                        key = result[i]
+                        match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                        if match:
+                            func_name, param = match.groups()
+                            getanstype = await my_function(func_name, param, event,data)
+                            if getanstype:
+                                ans += getanstype
+                    if ans != "":
+                        await grouprequest.send(ans)
+                    else:
+                        pass
+    else:
+        logger.opt(colors=True).error(
+        f"<yellow>错误！</yellow> <blue>{file_path}</blue><red> 文件不存在</red>"
+        )
 
 @privaterequest.handle()
 async def _(event: PrivateMessageEvent):
     qua = str(event.get_message()).strip()
     file_path = 'dicpro.txt'
     s = parse_file(file_path)
-    s = s.replace('$', '&#36;')
-    result = parse_string(s,event,qua)
-    for key in result:
-        match_data = re.search(rf'^{key}$', qua)
-        if match_data and key not in event_rule:
-            result = result[key]
-            data = match_data.groups()
-            ans = ""
-            if len(result) != 0:
-                for i in range(len(result)):
-                    key = result[i]
-                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
-                    if match:
-                        func_name, param = match.groups()
-                        getanstype = await my_function(func_name, param, event,data)
-                        if getanstype:
-                            ans += getanstype
-                if ans != "":
-                    await privatemassagefix(event, ans)
-                else:
-                    pass
+    if s:
+        s = s.replace('$', '&#36;')
+        result = parse_string(s,event,qua)
+        for key in result:
+            match_data = re.search(rf'^{key}$', qua)
+            if match_data and key not in event_rule:
+                result = result[key]
+                data = match_data.groups()
+                ans = ""
+                if len(result) != 0:
+                    for i in range(len(result)):
+                        key = result[i]
+                        match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                        if match:
+                            func_name, param = match.groups()
+                            getanstype = await my_function(func_name, param, event,data)
+                            if getanstype:
+                                ans += getanstype
+                    if ans != "":
+                        await privatemassagefix(event, ans)
+                    else:
+                        pass
+    else:
+        logger.opt(colors=True).error(
+        f"<yellow>错误！</yellow> <blue>{file_path}</blue><red> 文件不存在</red>"
+        )
 
 @pokeevent.handle()
 async def _(event: NotifyEvent):
     file_path = 'dicpro.txt'
     s = parse_file(file_path)
-    s = s.replace('$', '&#36;')
-    result = await parse_string(s,event,data=None)
-    if "[戳一戳]" in result:
-        result = result["[戳一戳]"]
-        ans = ""
-        if len(result) != 0:
-            for i in range(len(result)):
-                key = result[i]
-                match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
-                data = ""
-                if match:
-                    func_name, param = match.groups()
-                    ans += await my_function(func_name, param, event,data)
-            await pokeevent.send(ans)
+    if s:
+        s = s.replace('$', '&#36;')
+        result = await parse_string(s,event,data=None)
+        if "[戳一戳]" in result:
+            result = result["[戳一戳]"]
+            ans = ""
+            if len(result) != 0:
+                for i in range(len(result)):
+                    key = result[i]
+                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                    data = ""
+                    if match:
+                        func_name, param = match.groups()
+                        ans += await my_function(func_name, param, event,data)
+                await pokeevent.send(ans)
+    else:
+        logger.opt(colors=True).error(
+        f"<yellow>错误！</yellow> <blue>{file_path}</blue><red> 文件不存在</red>"
+        )
 
 @groupaddevent.handle()
 async def _(event: GroupIncreaseNoticeEvent):
     file_path = 'dicpro.txt'
     s = parse_file(file_path)
-    s = s.replace('$', '&#36;')
-
-    result = await parse_string(s,event,data=None)
-    if "[入群通知]" in result:
-        result = result["[入群通知]"]
-        ans = ""
-        if len(result) != 0:
-            for i in range(len(result)):
-                key = result[i]
-                match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
-                data = ""
-                if match:
-                    func_name, param = match.groups()
-                    ans += await my_function(func_name, param, event,data)
-            await pokeevent.send(ans)
+    if s:
+        s = s.replace('$', '&#36;')
+        result = await parse_string(s,event,data=None)
+        if "[入群通知]" in result:
+            result = result["[入群通知]"]
+            ans = ""
+            if len(result) != 0:
+                for i in range(len(result)):
+                    key = result[i]
+                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                    data = ""
+                    if match:
+                        func_name, param = match.groups()
+                        ans += await my_function(func_name, param, event,data)
+                await pokeevent.send(ans)
+    else:
+        logger.opt(colors=True).error(
+        f"<yellow>错误！</yellow> <blue>{file_path}</blue><red> 文件不存在</red>"
+        )
 
 @groupwantaddevent.handle()
 async def _(event: GroupRequestEvent):
     file_path = 'dicpro.txt'
-
     s = parse_file(file_path)
-    s = s.replace('$', '&#36;')
-
-    result = await parse_string(s,event,data=None)
-    if "[加群请求]" in result:
-        result = result["[加群请求]"]
-        ans = ""
-        if len(result) != 0:
-            for i in range(len(result)):
-                key = result[i]
-                match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
-                data = ""
-                if match:
-                    func_name, param = match.groups()
-                    ans += await my_function(func_name, param, event,data)
-            await groupwantaddevent.send(ans)
+    if s:
+        s = s.replace('$', '&#36;')
+        result = await parse_string(s,event,data=None)
+        if "[加群请求]" in result:
+            result = result["[加群请求]"]
+            ans = ""
+            if len(result) != 0:
+                for i in range(len(result)):
+                    key = result[i]
+                    match = re.search(r'^&#36;(\w+)\s+(.+)&#36;$', key)
+                    data = ""
+                    if match:
+                        func_name, param = match.groups()
+                        ans += await my_function(func_name, param, event,data)
+                await groupwantaddevent.send(ans)
+    else:
+        logger.opt(colors=True).error(
+        f"<yellow>错误！</yellow> <blue>{file_path}</blue><red> 文件不存在</red>"
+        )
