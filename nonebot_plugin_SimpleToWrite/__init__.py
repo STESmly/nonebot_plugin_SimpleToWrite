@@ -14,12 +14,11 @@ from nonebot.log import logger
 from nonebot.typing import overrides
 from nonebot.matcher import current_event, current_bot
 from .teach import teach
-from .livedm.bllichat import sample
 import httpx
 
 __plugin_meta__ = PluginMetadata(
-    name="简易编写词库+b站弹幕监控",
-    description="适用于零基础的小白向快速编写功能的词库语言插件，以及基于ws的b站弹幕监控",
+    name="简易编写词库",
+    description="适用于零基础的小白向快速编写功能的词库语言插件",
     usage="在机器人的项目目录里面新建dicpro.txt，再根据github主页的使用教程进行编写",
 
     type="application",
